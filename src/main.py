@@ -21,8 +21,6 @@ def generate_graph(n, max_x, max_y):
             y = points[i][1] - points[j][1]
             d = math.sqrt(x ** 2 + y ** 2)
             edges.append((i, j, d))
-    print(points)
-    print(edges)
 
     G = nx.Graph()
     G.add_weighted_edges_from(edges)
@@ -30,7 +28,37 @@ def generate_graph(n, max_x, max_y):
 
 
 def nearest_neighbor(G):
-    pass
+    """
+    Computes an approxmation of metric TSP by starting in a city and then going
+    always travelling to the closest city that hasn't been visited yet.
+    """
+    def find_min_edge(v, vs):
+        m_v = None
+        m_d = -1
+        for u in vs:
+            d = G.edges[v, u]['weight']
+            if m_d < 0 or d < m_d:
+                m_d = d
+                m_v = u
+        return m_v, m_d
+
+    vertices = list(G.nodes)
+    if len(vertices) == 1:
+        return vertices[0], 0
+
+    first = vertices.pop()
+    visited = [first]
+    full_distance = 0
+    while len(vertices) > 0:
+        v = visited[-1]
+        min_vertex, min_distance = find_min_edge(v, vertices)
+        visited.append(min_vertex)
+        vertices.remove(min_vertex)
+        full_distance += min_distance
+
+    full_distance += G.edges[visited[0], visited[-1]]['weight']
+    return visited, full_distance
+
 
 def apx_2(G):
     pass
