@@ -46,7 +46,7 @@ def nearest_neighbor(G):
     if len(vertices) == 1:
         return vertices[0], 0
 
-    first = vertices.pop()
+    first = vertices.pop(0)
     visited = [first]
     full_distance = 0
     while len(vertices) > 0:
@@ -61,11 +61,42 @@ def nearest_neighbor(G):
 
 
 def apx_2(G):
-    pass
+    """
+    2-approximation algorithm for metric TSP using minimum spanning tree
+    """
+    T = nx.algorithms.tree.mst.minimum_spanning_tree(G)
+    vertices = list(nx.algorithms.traversal.depth_first_search.dfs_preorder_nodes(T))
+    distance = G.edges[vertices[0], vertices[-1]]['weight']
+    for i in range(len(vertices) - 1):
+        distance += G.edges[vertices[i], vertices[i+1]]['weight']
+    return vertices, distance
 
 def christofides(G):
-    pass
+    """
+    Christofides 1.5-approximation algorithm for metric TSP
+    """
+    G = G.copy()
+    T = nx.algorithms.tree.mst.minimum_spanning_tree(G)
+    O = filter(lambda v : T.degree(v) % 2 == 1, T.nodes)
+    subgraph = G.subgraph(O)
+    for v, u in subgraph.edges:
+        subgraph.edges[v, u]['weight'] *= -1
+    M = nx.algorithms.matching.max_weight_matching(subgraph, maxcardinality=True)
+    for v, u in subgraph.edges:
+        subgraph.edges[v, u]['weight'] *= -1
 
+    multigraph = nx.MultiGraph()
+    multigraph.add_edges_from(T.edges)
+    multigraph.add_edges_from(M)
+
+    vertices = []
+    for u, v in nx.algorithms.euler.eulerian_circuit(multigraph):
+        if u not in vertices:
+            vertices.append(u)
+    distance = G.edges[vertices[0], vertices[-1]]['weight']
+    for i in range(len(vertices) - 1):
+        distance += G.edges[vertices[i], vertices[i+1]]['weight']
+    return vertices, distance
 
 if __name__ == '__main__':
     pass
